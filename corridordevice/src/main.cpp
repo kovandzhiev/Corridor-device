@@ -24,36 +24,6 @@ bool _movements[2] {false, false};
 unsigned long _fanOffTime;
 FluentLight _ledLight(EXT_GROVE_D0);
 
-void setup()
-{
-#ifdef DEBUG
-	Serial.begin(115200);
-	Serial.println("Starting...");
-#endif
-
-	delay(5000); // Do not block upload of the new sketch
-
-	KMPDinoWiFiESP.init();
-
-	_ledLight.setMaxBrightness(1024);
-	_ledLight.setRunningDuration(LIGHT_RUNNING_DURATION_MS);
-	_ledLight.setBrightenTime(LIGHT_BRIGHTEN_TIME_MS);
-	_ledLight.setFadeTime(LIGHT_FADE_TIME_MS);
-	_ledLight.onStateChanged = onFluentLightStateChanged;
-
-	_ledLight.begin();
-
-#ifdef DEBUG
-	Serial.println("The corridor device is started.");
-#endif
-}
-
-void loop() {
-	processLedLampLogic();
-	processFanLogic();
-	_ledLight.process();
-}
-
 void processLedLampLogic() {
 	bool motionDetected = false;
 
@@ -116,4 +86,34 @@ void onFluentLightStateChanged(FluentLight::State state)
 		Serial.print("Busy led state: ");
 		Serial.println(busyLedState);
 #endif
+}
+
+void setup()
+{
+#ifdef DEBUG
+	Serial.begin(115200);
+	Serial.println("Starting...");
+#endif
+
+	delay(5000); // Do not block upload of the new sketch
+
+	KMPDinoWiFiESP.init();
+
+	_ledLight.setMaxBrightness(1024);
+	_ledLight.setRunningDuration(LIGHT_RUNNING_DURATION_MS);
+	_ledLight.setBrightenTime(LIGHT_BRIGHTEN_TIME_MS);
+	_ledLight.setFadeTime(LIGHT_FADE_TIME_MS);
+	_ledLight.onStateChanged = onFluentLightStateChanged;
+
+	_ledLight.begin();
+
+#ifdef DEBUG
+	Serial.println("The corridor device is started.");
+#endif
+}
+
+void loop() {
+	processLedLampLogic();
+	processFanLogic();
+	_ledLight.process();
 }
