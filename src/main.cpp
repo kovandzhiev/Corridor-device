@@ -15,77 +15,50 @@
 #include "FluentLight.h"
 
 #define DEBUG
-#define FAN_RUNNING_DURATION_MS 30 * 60 * 1000 // 30 min
-#define LIGHT_RUNNING_DURATION_MS 2 * 60 * 1000 // 2 min
+#define MAX_BRIGHTNESS 1024 // 100 % brightness
+#define NO_POWER_BRIGHTNESS MAX_BRIGHTNESS / 2 // 50 % brightness
+#define NIGHT_BRIGHTNESS MAX_BRIGHTNESS / 3 // 30 % brightness
+#define LIGHT_RUNNING_DURATION_MS 1 * 60 * 1000 // 1 min
 #define LIGHT_BRIGHTEN_TIME_MS 5 * 1000 // 5 sec
 #define LIGHT_FADE_TIME_MS 1 * 60 * 1000 // 1 min
 
-bool _movements[2] {false, false};
-unsigned long _fanOffTime;
-FluentLight _ledLight(EXT_GROVE_D0);
+FluentLight _lights(EXT_GROVE_D0);
+bool _isMotionDetected;
+bool _isMainPower;
+bool _isDay;
 
-void processLedLampLogic() {
-	bool motionDetected = false;
+void processInputs() {
+	_isMotionDetected = 
+		KMPDinoWiFiESP.GetOptoInState(OptoIn1) || // PIRs sensors
+		KMPDinoWiFiESP.GetOptoInState(OptoIn2); // Dors sensors
 
-	bool pirInput = KMPDinoWiFiESP.GetOptoInState(OptoIn1);
-	if(pirInput != _movements[0]) {
-		motionDetected = true;
-		_movements[0] = pirInput;
-	}
+	_isMainPower = KMPDinoWiFiESP.GetOptoInState(OptoIn3);
 
-	bool doorInput = KMPDinoWiFiESP.GetOptoInState(OptoIn2);
-	if(doorInput != _movements[1]) {
-		motionDetected = true;
-		_movements[1] = doorInput;
-	}
-
-	if(motionDetected) {
-		_ledLight.on();
-#ifdef DEBUG
-		Serial.println("Light On");
-#endif
-	}
+	_isDay = KMPDinoWiFiESP.GetOptoInState(OptoIn4);
 }
 
-void processFanLogic() {
-	bool fanInput = KMPDinoWiFiESP.GetOptoInState(OptoIn3);
-	bool fanOn = false;
-	if(fanInput) {
-		// Add another xx minutes
-		_fanOffTime = millis() + FAN_RUNNING_DURATION_MS;
-		fanOn = true;
-#ifdef DEBUG
-		Serial.println("Fan extend running time");
-#endif
-	}
+void processLogic() {
+	word brightness = MAX_BRIGHTNESS;
 
-	// The fan has to be On and now is off -> swich On the fan relay
-	if(fanOn && !KMPDinoWiFiESP.GetRelayState(Relay1)) {
-		KMPDinoWiFiESP.SetRelayState(Relay1, true);
-#ifdef DEBUG
-		Serial.println("Fan On");
-#endif
+	// If there is no main power, reduce brightness
+	if (!_isMainPower)
+	{
+		brightness = NO_POWER_BRIGHTNESS;
 	}
-
-	// The fan is On and fun On duration is gone -> swich Off the fan relay
-	if(KMPDinoWiFiESP.GetRelayState(Relay1) && _fanOffTime < millis()) {
-		KMPDinoWiFiESP.SetRelayState(Relay1, false);
-#ifdef DEBUG
-		Serial.println("Fan Off");
-#endif
-	}
-}
-
-void onFluentLightStateChanged(FluentLight::State state)
-{
-	bool busyLedState = state == FluentLight::State::On;
 	
-	KMPDinoWiFiESP.SetRelayState(Relay2, busyLedState);
+	if (_isDay)
+	{
+		/* code */
+	}
+	
 
-#ifdef DEBUG
-		Serial.print("Busy led state: ");
-		Serial.println(busyLedState);
-#endif
+	_isMotionDetected = 
+		KMPDinoWiFiESP.GetOptoInState(OptoIn1) || // PIRs sensors
+		KMPDinoWiFiESP.GetOptoInState(OptoIn2); // Dors sensors
+
+	_isMainPower = KMPDinoWiFiESP.GetOptoInState(OptoIn3);
+
+	_isDay = KMPDinoWiFiESP.GetOptoInState(OptoIn4);
 }
 
 void setup()
@@ -99,13 +72,12 @@ void setup()
 
 	KMPDinoWiFiESP.init();
 
-	_ledLight.setMaxBrightness(1024);
-	_ledLight.setRunningDuration(LIGHT_RUNNING_DURATION_MS);
-	_ledLight.setBrightenTime(LIGHT_BRIGHTEN_TIME_MS);
-	_ledLight.setFadeTime(LIGHT_FADE_TIME_MS);
-	_ledLight.onStateChanged = onFluentLightStateChanged;
+	_lights.setMaxBrightness(MAX_BRIGHTNESS);
+	_lights.setRunningDuration(LIGHT_RUNNING_DURATION_MS);
+	_lights.setBrightenTime(LIGHT_BRIGHTEN_TIME_MS);
+	_lights.setFadeTime(LIGHT_FADE_TIME_MS);
 
-	_ledLight.begin();
+	_lights.begin();
 
 #ifdef DEBUG
 	Serial.println("The corridor device is started.");
@@ -113,7 +85,7 @@ void setup()
 }
 
 void loop() {
-	processLedLampLogic();
-	processFanLogic();
-	_ledLight.process();
+	processInputs();
+	processLogic();
+	_lights.process();
 }
