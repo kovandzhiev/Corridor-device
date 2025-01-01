@@ -1,10 +1,10 @@
 /*!
  * main.cpp
- * This is firmware for Corridor device. This device will manage our corridor lights. The cases are varies:
+ * This is a firmware for Corridor device. This device will manage our corridor lights. The cases are varies:
  * - switch on light 
  *   - there are 2 PIR sensors mounted on the ceiling
  *   - Dors - they have sensor which can receive signal for oper/close
- * - manage light illumination by standard it is 100%
+ * - manage light illumination by standard is 100%
  *   - no main power (UPS) reduce to 50%
  *   - night - switch off 2 small lams, stays only 1 lamp. The illumination will br reduced to 30%
  *
