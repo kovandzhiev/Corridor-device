@@ -36,11 +36,18 @@ FluentLight _lights(EXT_GROVE_D0, MAX_BRIGHTNESS, DEFAULT_PWM_FREQUENCY);
 bool _isMotionDetected;
 bool _isMainPower;
 bool _isDay;
+bool _movements[2] {false, false};
 
 void processInputs() {
+	bool pirInput = KMPDinoWiFiESP.GetOptoInState(OptoIn1);
+	bool doorInput = KMPDinoWiFiESP.GetOptoInState(OptoIn2);
+
 	_isMotionDetected = 
-		KMPDinoWiFiESP.GetOptoInState(OptoIn1) || // PIRs sensors
-		KMPDinoWiFiESP.GetOptoInState(OptoIn2); // Dors sensors
+		pirInput != _movements[0] || // PIR sensors
+		doorInput != _movements[1]; // Dors/PIR sensors
+
+	_movements[0] = pirInput;
+	_movements[1] = doorInput;
 
 	_isMainPower = KMPDinoWiFiESP.GetOptoInState(OptoIn3);
 
