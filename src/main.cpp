@@ -32,7 +32,7 @@
 #define LIGHT_BRIGHTEN_TIME_MS 5 * 1000 // 5 sec
 #define LIGHT_FADE_TIME_MS 20 * 1000 // 20 sec
 
-FluentLight _lights(EXT_GROVE_D0, MAX_BRIGHTNESS, DEFAULT_PWM_FREQUENCY);
+FluentLight _lights(EXT_GROVE_D0, MAX_BRIGHTNESS);
 bool _isMotionDetected;
 bool _isMainPower;
 bool _isDay;
@@ -77,7 +77,7 @@ void processLogic() {
 
 	if (_isMotionDetected)
 	{
-		_lights.on();
+		_lights.turnOn();
 	}
 }
 
